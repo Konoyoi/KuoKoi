@@ -6953,7 +6953,6 @@ class Community:
         })
 
         else: raise ValueError("There must be a value inside one of the following variables: userId, blogId, wikiId.")
-
         flagMethod = "g-flag" if asGuest else "flag"
 
         return ApiResponse(self.session.handler(
@@ -7676,3 +7675,64 @@ class Community:
             method = "GET",
             url = f"/g/s-x{comId or self.community_id}/community/invitation/logs?start{start}&size={size}"
         ))
+    
+    @community
+    def promote(self, userId: str, rank: PromateType = PromateType.CURATOR, comId: Union[str, int] = None) -> ApiResponse:
+        rank = rank.lower().replace("agent", "transfer-agent")
+
+        if rank.lower() not in ["transfer-agent", "leader", "curator"]:
+            raise exceptions.WrongType(rank)
+
+        if comId is None: raise exceptions.MissingCommunityId()
+        else: 
+            return ApiResponse(self.session.handler(
+            method= "POST",
+            url= f"/x{comId or self.community_id}/s/user-profile/{userId}/{rank}"
+        ))
+
+
+    @community
+    def fetch_notices(self, start: int = 0, size: int = 25, comId: Union[str, int] = None):
+        """
+        :param start: Start of the List (Start: 0)
+        :param size: Amount of Notices to Show
+        :return: Notices List
+        """
+        return ApiResponse(self.session.handler(
+            method="GET",
+            url=f"/x{comId or self.community_id}/s/notice?type=usersV2&status=1&start={start}&size={size}"
+        ))
+        
+
+    @community    
+    def accept_wiki_request(self, requestId: str, destinationCategoryIdList: list = None, comId: Union[str, int] = None):
+
+        return ApiResponse(self.session.handler(
+            method="POST",
+            url=f"/x{comId or self.community_id}/s/knowledge-base-request/{requestId}/approve",
+            data = {
+            "destinationCategoryIdList": destinationCategoryIdList,
+            "actionType": "create",
+            "timestamp": int(time() * 1000)
+        }
+        ))
+        
+
+    @community
+    def reject_wiki_request(self, requestId: str, comId: Union[str, int] = None):
+
+        return ApiResponse(self.session.handler(
+            method="POST",
+            url=f"/x{comId or self.community_id}/s/knowledge-base-request/{requestId}/reject"
+        ))
+
+
+    @community
+    def wiki_submissions(self, start: int = 0, size: int = 25, comId: Union[str, int] = None) -> CWikiRequest:
+        
+
+        return general.WikiRequestList(self.session.handler(
+            method="GET",
+            url=f"/x{comId or self.community_id}/s/knowledge-base-request?type=all&start={start}&size={size}"
+        ))
+        
