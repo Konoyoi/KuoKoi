@@ -177,7 +177,7 @@ class CCommunityList:
         self.ndcId:                                 list = [x.ndcId for x in parser]
         self.comId:                                 list = [x.comId for x in parser]
         self.icon:                                  list = [x.icon for x in parser]
-        self.joinType:                               list = [x.joinType for x in parser]
+        self.joinType:                              list = [x.joinType for x in parser]
     
     def json(self) -> Union[dict, str]:
         return self.data
@@ -185,6 +185,7 @@ class CCommunityList:
 class CBlog:
     def __init__(self, data: Union[dict, str]) -> None:
         self.data                   = data
+        self.extensions             = {}
 
         if isinstance(data, dict):
             self.data:                  dict = data.get("blog", data)
@@ -229,9 +230,11 @@ class CBlog:
 class CWiki:
     def __init__(self, data: Union[dict, str]) -> None:
         self.data                   = data
+        self.extensions             = {}
 
         if isinstance(data, dict):
             self.data:                  dict = data.get("item", data)
+            self.requestId:             str = self.data.get("requestId")
             self.globalVotesCount:      int = self.data.get("globalVotesCount")
             self.globalVotedValue:      int = self.data.get("globalVotedValue")
             self.votedValue:            int = self.data.get("votedValue")
@@ -239,7 +242,7 @@ class CWiki:
             self.mediaList:             list = self.data.get("mediaList")
             self.style:                 dict = self.data.get("style")
             self.totalQuizPlayCount:    int = self.data.get("totalQuizPlayCount")
-            self.title:                 str = self.data.get("title")
+            self.title:                 str = self.data.get("label")
             self.tipInfo:               dict = self.data.get("tipInfo")
             self.contentRating:         int = self.data.get("contentRating")
             self.content:               str = self.data.get("content")
@@ -266,6 +269,7 @@ class CWiki:
             self.createdTime:           str = self.data.get("createdTime")
             self.endTime:               str = self.data.get("endTime")
             self.commentsCount:         int = self.data.get("commentsCount")
+            self.destinationItemId:     str = self.data.get("destinationItemId")
 
     def json(self) -> Union[dict, str]:
         return self.data
@@ -275,6 +279,7 @@ class CWikiList:
     def __init__(self, data: Union[dict, str]):
         self.data:                   dict = data.get("itemList", data)
         parser:                      List[CWiki] = [CWiki(x) for x in self.data]
+        Extparser:                   List[CWikiExtensions] = [CWikiExtensions(x) for x in self.data]
         self.author:                 UserProfileList = UserProfileList([x.author.json() for x in parser])
         self.globalVotesCount:       list = [x.globalVotesCount for x in parser]
         self.globalVotedValue:       list = [x.globalVotedValue for x in parser]
@@ -284,6 +289,8 @@ class CWikiList:
         self.style:                  list = [x.style for x in parser]
         self.totalQuizPlayCount:     list = [x.totalQuizPlayCount for x in parser]
         self.title:                  list = [x.title for x in parser]
+        self.requestId:              list = [x.requestId for x in parser]
+        self.destinationItemId:      list = [x.destinationItemId for x in parser]
         self.tipInfo:                list = [x.tipInfo for x in parser]
         self.contentRating:          list = [x.contentRating for x in parser]
         self.content:                list = [x.content for x in parser]
@@ -298,7 +305,7 @@ class CWikiList:
         self.wikiId:                 list = [x.wikiId for x in parser]
         self.viewCount:              list = [x.viewCount for x in parser]
         self.language:               list = [x.language for x in parser]
-        self.extensions:             list = [x.extensions for x in parser]
+        self.extensions:             list = [x.extensions for x in Extparser]
         self.votesCount:             list = [x.votesCount for x in parser]
         self.ndcId:                  list = [x.ndcId for x in parser]
         self.createdTime:            list = [x.createdTime for x in parser]
@@ -307,6 +314,104 @@ class CWikiList:
 
     def json(self) -> Union[dict, str]:
         return self.data
+
+
+class CWikiExtensions:
+    def __init__(self, data: dict):
+        try:
+            self.data = data.get("extensions", data)
+        except AttributeError:
+            self.data = None
+
+    def _check_extensions(F):
+        def wrapper(*args, **kwargs):
+            return None if args[0].data is None else F(*args, **kwargs)
+        return wrapper
+    
+    @property    
+    @_check_extensions
+    def backgroundColor(self) -> str:
+        """"""
+        return self.data.get("backgroundColor")
+    
+    @property    
+    @_check_extensions
+    def fansOnly(self) -> bool:
+        """"""
+        return self.data.get("fansOnly")
+    
+    @property    
+    @_check_extensions
+    def knowledgeBase(self) -> dict:
+        """"""
+        return self.data.get("knowledgeBase")
+    
+    @property    
+    @_check_extensions
+    def version(self) -> int:
+        """"""
+        return self.data.get("version")
+    
+    @property    
+    @_check_extensions
+    def originalWikiId(self) -> str:
+        """"""
+        return self.data.get("originalItemId")
+    
+    @property    
+    @_check_extensions
+    def contributors(self) -> str:
+        """"""
+        return self.data.get("contributors")
+    
+
+class CWikiExtensionsList:
+    def __init__(self, data: Union[dict, str]):
+        try:
+            self.data: data.get("extensions", data)
+        except AttributeError:
+            self.data = None
+
+    def _check_extensions(F):
+        def wrapper(*args, **kwargs):
+            return None if args[0].data is None else F(*args, **kwargs)
+        return wrapper
+
+    @property    
+    @_check_extensions
+    def backgroundColor(self) -> List[str]:
+        return [i.get("backgroundColor") if i else None for i in self.data]
+    
+    @property    
+    @_check_extensions
+    def fansOnly(self) -> List[bool]:
+        return [i.get("fansOnly") if i else None for i in self.data]
+    
+    @property    
+    @_check_extensions
+    def knowledgeBase(self) -> List[dict]:
+        return [i.get("knowledgeBase") if i else None for i in self.data]
+    
+    @property    
+    @_check_extensions
+    def version(self) -> List[int]:
+        return [i.get("version") if i else None for i in self.data]
+    
+    @property    
+    @_check_extensions
+    def originalWikiId(self) -> List[str]:
+        return [i.get("originalItemId") if i else None for i in self.data]
+    
+    @property    
+    @_check_extensions
+    def contributors(self) -> List[str]:
+        return [i.get("contributors") if i else None for i in self.data]
+    
+    def json(self) -> dict:
+        """Returns the json data"""
+        return self.data
+
+
 
 class CBlogList:
     def __init__(self, data: Union[dict, str]):
@@ -1164,3 +1269,311 @@ class GlobalNotificationList:
     
     def json(self) -> Union[dict, None]:
         return self.data
+        
+class CWikiRequest:
+    def __init__(self, data: Union[dict, str]) -> None:
+        self.data = data
+        
+        if isinstance(data, dict):
+            self.data:                 dict = data.get("knowledgeBase", data)
+            self.authorId:             str = self.data.get("uid")
+            self.status:               int = self.data.get("status")
+            self.modifiedTime:         str = self.data.get("modifiedTime")
+            self.message:              str = self.data.get("message")
+            self.wikiId:               str = self.data.get("itemId")
+            self.requestId:            str = self.data.get("requestId")
+            self.destinationItemId:    str = self.data.get("destinationItemId")
+            self.createdTime:          str = self.data.get("createdTime")
+            self.responseMessage:      str = self.data.get("responseMessage")
+
+    def json(self) -> Union[dict, str]:
+        return self.data
+ 
+    
+class CWikiRequestList:
+    def __init__(self, data: Union[dict, str]) -> None:
+        
+        self.data:                   dict = data.get("knowledgeBase")
+        parser:                      list = [CWikiRequest(x) for x in self.data]
+        self.author:                 UserProfileList = UserProfileList([x.author.json() for x in parser])
+        self.authorId:               list = [x.authorId for x in parser]
+        self.status:                 list = [x.status for x in parser]
+        self.modifiedTime:           list = [x.modifiedTime for x in parser]
+        self.message:                list = [x.message for x in parser]
+        self.wikiId:                 list = [x.wikiId for x in parser]
+        self.requestId:              list = [x.requestId for x in parser]
+        self.destinationItemId:      list = [x.destinationItemId for x in parser]
+        self.createdTime:            list = [x.createdTime for x in parser]
+        self.responseMessage:        list = [x.responseMessage for x in parser]
+    
+    def json(self) -> Union[dict, str]:
+        return self.data
+
+
+
+
+class Wiki:
+    def __init__(self, data):
+        self.json = data
+
+        try: self.labels: WikiLabelList = WikiLabelList(data["extensions"]["props"]).WikiLabelList
+        except (KeyError, TypeError): self.labels: WikiLabelList = WikiLabelList([])
+
+        self.createdTime = None
+        self.modifiedTime = None
+        self.wikiId = None
+        self.status = None
+        self.style = None
+        self.globalCommentsCount = None
+        self.votedValue = None
+        self.globalVotesCount = None
+        self.globalVotedValue = None
+        self.contentRating = None
+        self.title = None
+        self.content = None
+        self.keywords = None
+        self.needHidden = None
+        self.guestVotesCount = None
+        self.extensions = None
+        self.backgroundColor = None
+        self.fansOnly = None
+        self.knowledgeBase = None
+        self.originalWikiId = None
+        self.version = None
+        self.contributors = None
+        self.votesCount = None
+        self.comId = None
+        self.createdTime = None
+        self.mediaList = None
+        self.commentsCount = None
+
+    @property
+    def Wiki(self):
+        try: self.wikiId = self.json["itemId"]
+        except (KeyError, TypeError): pass
+        try: self.status = self.json["status"]
+        except (KeyError, TypeError): pass
+        try: self.style = self.json["style"]
+        except (KeyError, TypeError): pass
+        try: self.globalCommentsCount = self.json["globalCommentsCount"]
+        except (KeyError, TypeError): pass
+        try: self.modifiedTime = self.json["modifiedTime"]
+        except (KeyError, TypeError): pass
+        try: self.votedValue = self.json["votedValue"]
+        except (KeyError, TypeError): pass
+        try: self.globalVotesCount = self.json["globalVotesCount"]
+        except (KeyError, TypeError): pass
+        try: self.globalVotedValue = self.json["globalVotedValue"]
+        except (KeyError, TypeError): pass
+        try: self.contentRating = self.json["contentRating"]
+        except (KeyError, TypeError): pass
+        try: self.contentRating = self.json["contentRating"]
+        except (KeyError, TypeError): pass
+        try: self.title = self.json["label"]
+        except (KeyError, TypeError): pass
+        try: self.content = self.json["content"]
+        except (KeyError, TypeError): pass
+        try: self.keywords = self.json["keywords"]
+        except (KeyError, TypeError): pass
+        try: self.needHidden = self.json["needHidden"]
+        except (KeyError, TypeError): pass
+        try: self.guestVotesCount = self.json["guestVotesCount"]
+        except (KeyError, TypeError): pass
+        try: self.extensions = self.json["extensions"]
+        except (KeyError, TypeError): pass
+        try: self.votesCount = self.json["votesCount"]
+        except (KeyError, TypeError): pass
+        try: self.comId = self.json["ndcId"]
+        except (KeyError, TypeError): pass
+        try: self.createdTime = self.json["createdTime"]
+        except (KeyError, TypeError): pass
+        try: self.mediaList = self.json["mediaList"]
+        except (KeyError, TypeError): pass
+        try: self.commentsCount = self.json["commentsCount"]
+        except (KeyError, TypeError): pass
+        try: self.backgroundColor = self.json["extensions"]["style"]["backgroundColor"]
+        except (KeyError, TypeError): pass
+        try: self.fansOnly = self.json["extensions"]["fansOnly"]
+        except (KeyError, TypeError): pass
+        try: self.knowledgeBase = self.json["extensions"]["knowledgeBase"]
+        except (KeyError, TypeError): pass
+        try: self.version = self.json["extensions"]["knowledgeBase"]["version"]
+        except (KeyError, TypeError): pass
+        try: self.originalWikiId = self.json["extensions"]["knowledgeBase"]["originalItemId"]
+        except (KeyError, TypeError): pass
+        try: self.contributors = self.json["extensions"]["knowledgeBase"]["contributors"]
+        except (KeyError, TypeError): pass
+
+
+
+class WikiList:
+    def __init__(self, data):
+        _author, _labels = [], []
+
+        self.json = data
+
+        for y in data:
+            try: _author.append(y["author"])
+            except (KeyError, TypeError): _author.append(None)
+            try: _labels.append(WikiLabelList(y["extensions"]["props"]).WikiLabelList)
+            except (KeyError, TypeError): _labels.append(None)
+
+        self.labels = _labels
+        self.createdTime = []
+        self.modifiedTime = []
+        self.wikiId = []
+        self.status = []
+        self.style = []
+        self.globalCommentsCount = []
+        self.votedValue = []
+        self.globalVotesCount = []
+        self.globalVotedValue = []
+        self.contentRating = []
+        self.title = []
+        self.content = []
+        self.keywords = []
+        self.needHidden = []
+        self.guestVotesCount = []
+        self.extensions = []
+        self.backgroundColor = []
+        self.fansOnly = []
+        self.knowledgeBase = []
+        self.originalWikiId = []
+        self.version = []
+        self.contributors = []
+        self.votesCount = []
+        self.comId = []
+        self.createdTime = []
+        self.mediaList = []
+        self.commentsCount = []
+
+    @property
+    def WikiList(self):
+        for x in self.json:
+            try: self.wikiId.append(x["itemId"])
+            except (KeyError, TypeError): self.wikiId.append(None)
+            try: self.status.append(x["status"])
+            except (KeyError, TypeError): self.status.append(None)
+            try: self.style.append(x["style"])
+            except (KeyError, TypeError): self.style.append(None)
+            try: self.globalCommentsCount.append(x["globalCommentsCount"])
+            except (KeyError, TypeError): self.globalCommentsCount.append(None)
+            try: self.modifiedTime.append(x["modifiedTime"])
+            except (KeyError, TypeError): self.modifiedTime.append(None)
+            try: self.votedValue.append(x["votedValue"])
+            except (KeyError, TypeError): self.votedValue.append(None)
+            try: self.globalVotesCount.append(x["globalVotesCount"])
+            except (KeyError, TypeError): self.globalVotesCount.append(None)
+            try: self.globalVotedValue.append(x["globalVotedValue"])
+            except (KeyError, TypeError): self.globalVotedValue.append(None)
+            try: self.contentRating.append(x["contentRating"])
+            except (KeyError, TypeError): self.contentRating.append(None)
+            try: self.contentRating.append(x["contentRating"])
+            except (KeyError, TypeError): self.contentRating.append(None)
+            try: self.title.append(x["label"])
+            except (KeyError, TypeError): self.title.append(None)
+            try: self.content.append(x["content"])
+            except (KeyError, TypeError): self.content.append(None)
+            try: self.keywords.append(x["keywords"])
+            except (KeyError, TypeError): self.keywords.append(None)
+            try: self.needHidden.append(x["needHidden"])
+            except (KeyError, TypeError): self.needHidden.append(None)
+            try: self.guestVotesCount.append(x["guestVotesCount"])
+            except (KeyError, TypeError): self.guestVotesCount.append(None)
+            try: self.extensions.append(x["extensions"])
+            except (KeyError, TypeError): self.extensions.append(None)
+            try: self.votesCount.append(x["votesCount"])
+            except (KeyError, TypeError): self.votesCount.append(None)
+            try: self.comId.append(x["ndcId"])
+            except (KeyError, TypeError): self.comId.append(None)
+            try: self.createdTime.append(x["createdTime"])
+            except (KeyError, TypeError): self.createdTime.append(None)
+            try: self.mediaList.append(x["mediaList"])
+            except (KeyError, TypeError): self.mediaList.append(None)
+            try: self.commentsCount.append(x["commentsCount"])
+            except (KeyError, TypeError): self.commentsCount.append(None)
+            try: self.backgroundColor.append(x["extensions"]["style"]["backgroundColor"])
+            except (KeyError, TypeError): self.backgroundColor.append(None)
+            try: self.fansOnly.append(x["extensions"]["fansOnly"])
+            except (KeyError, TypeError): self.fansOnly.append(None)
+            try: self.knowledgeBase.append(x["extensions"]["knowledgeBase"])
+            except (KeyError, TypeError): self.knowledgeBase.append(None)
+            try: self.version.append(x["extensions"]["knowledgeBase"]["version"])
+            except (KeyError, TypeError): self.version.append(None)
+            try: self.originalWikiId.append(x["extensions"]["knowledgeBase"]["originalItemId"])
+            except (KeyError, TypeError): self.originalWikiId.append(None)
+            try: self.contributors.append(x["extensions"]["knowledgeBase"]["contributors"])
+            except (KeyError, TypeError): self.contributors.append(None)
+
+        return self
+
+class WikiRequestList:
+    def __init__(self, data):
+        _author, _wiki, _originalWiki = [], [], []
+
+        self.json = data
+
+        for y in data:
+            try: _author.append(y["operator"])
+            except (KeyError, TypeError): _author.append(None)
+            try: _wiki.append(y["item"])
+            except (KeyError, TypeError): _wiki.append(None)
+            try: _originalWiki.append(y["originalItem"])
+            except (KeyError, TypeError): _originalWiki.append(None)
+
+        self.wiki: WikiList = WikiList(_wiki).WikiList
+        self.originalWiki: WikiList = WikiList(_originalWiki).WikiList
+
+        self.authorId = []
+        self.status = []
+        self.modifiedTime = []
+        self.message = []
+        self.wikiId = []
+        self.requestId = []
+        self.destinationItemId = []
+        self.createdTime = []
+        self.responseMessage = []
+
+    @property
+    def WikiRequestList(self):
+        for x in self.json:
+            try: self.authorId.append(x["uid"])
+            except (KeyError, TypeError): self.authorId.append(None)
+            try: self.status.append(x["status"])
+            except (KeyError, TypeError): self.status.append(None)
+            try: self.modifiedTime.append(x["modifiedTime"])
+            except (KeyError, TypeError): self.modifiedTime.append(None)
+            try: self.message.append(x["message"])
+            except (KeyError, TypeError): self.message.append(None)
+            try: self.wikiId.append(x["itemId"])
+            except (KeyError, TypeError): self.wikiId.append(None)
+            try: self.requestId.append(x["requestId"])
+            except (KeyError, TypeError): self.requestId.append(None)
+            try: self.destinationItemId.append(x["destinationItemId"])
+            except (KeyError, TypeError): self.destinationItemId.append(None)
+            try: self.createdTime.append(x["createdTime"])
+            except (KeyError, TypeError): self.createdTime.append(None)
+            try: self.responseMessage.append(x["responseMessage"])
+            except (KeyError, TypeError): self.responseMessage.append(None)
+
+        return self
+    
+
+class WikiLabelList:
+    def __init__(self, data):
+        self.json = data
+        self.title = []
+        self.content = []
+        self.type = []
+
+    @property
+    def WikiLabelList(self):
+        for x in self.json:
+            try: self.title.append(x["title"])
+            except (KeyError, TypeError): self.title.append(None)
+            try: self.content.append(x["value"])
+            except (KeyError, TypeError): self.content.append(None)
+            try: self.type.append(x["type"])
+            except (KeyError, TypeError): self.type.append(None)
+
+        return self
